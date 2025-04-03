@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
+  StatusBar,
+  Platform,
 } from "react-native";
 
 const App = () => {
@@ -15,7 +17,6 @@ const App = () => {
   const [editName, setEditName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Function to add a new name to the list
   const addName = () => {
     if (newName.trim() === "") {
       setErrorMessage("Please enter a name.");
@@ -28,7 +29,7 @@ const App = () => {
     ]);
 
     setNewName("");
-    setErrorMessage(""); // Clear error message on successful add
+    setErrorMessage("");
   };
 
   const deleteName = (id) => {
@@ -60,6 +61,9 @@ const App = () => {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
+
+      <View style={styles.titleSpacing} />
       <Text style={styles.title}>Meeting Attendance</Text>
 
       <View style={styles.inputContainer}>
@@ -69,48 +73,57 @@ const App = () => {
           value={newName}
           onChangeText={(text) => {
             setNewName(text);
-            setErrorMessage(""); // Remove error when user starts typing
+            setErrorMessage("");
           }}
-          onSubmitEditing={addName} // Adds on pressing enter (on keyboard)
+          onSubmitEditing={addName}
         />
         <TouchableOpacity style={styles.addButton} onPress={addName}>
           <Text style={styles.addButtonText}>Add</Text>
         </TouchableOpacity>
       </View>
 
-      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+      {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
 
       <FlatList
         data={names}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.listItem}>
-            <TouchableOpacity onPress={() => toggleAttendance(item.id)}>
-              <Text style={[styles.nameText, item.present && styles.present]}>
-                {editId === item.id ? (
-                  <TextInput
-                    style={styles.editInput}
-                    value={editName}
-                    onChangeText={setEditName}
-                    autoFocus
-                  />
-                ) : (
-                  item.name
-                )}
-              </Text>
+            {/* ✅ Custom Styled Grey Checkbox */}
+            <TouchableOpacity
+              style={[
+                styles.checkbox,
+                item.present && styles.checkedCheckbox,
+              ]}
+              onPress={() => toggleAttendance(item.id)}
+            >
+              {item.present && <Text style={styles.checkmark}>✔</Text>}
             </TouchableOpacity>
+
+            {editId === item.id ? (
+              <TextInput
+                style={styles.editInput}
+                value={editName}
+                onChangeText={setEditName}
+                autoFocus
+              />
+            ) : (
+              <Text style={[styles.nameText, styles.centerText, item.present && styles.present]}>
+                {item.name}
+              </Text>
+            )}
 
             <View style={styles.actions}>
               {editId === item.id ? (
-                <TouchableOpacity onPress={saveEdit} style={styles.saveButton}>
+                <TouchableOpacity onPress={saveEdit} style={[styles.actionButton, styles.save]}>
                   <Text style={styles.buttonText}>💾</Text>
                 </TouchableOpacity>
               ) : (
-                <TouchableOpacity onPress={() => startEdit(item)} style={styles.editButton}>
+                <TouchableOpacity onPress={() => startEdit(item)} style={[styles.actionButton, styles.edit]}>
                   <Text style={styles.buttonText}>✏️</Text>
                 </TouchableOpacity>
               )}
-              <TouchableOpacity onPress={() => deleteName(item.id)} style={styles.deleteButton}>
+              <TouchableOpacity onPress={() => deleteName(item.id)} style={[styles.actionButton, styles.delete]}>
                 <Text style={styles.buttonText}>🗑️</Text>
               </TouchableOpacity>
             </View>
@@ -128,8 +141,13 @@ const App = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#f8f8f8",
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight + 10 : 50,
+    backgroundColor: "#f5f5f5",
+    alignItems: "center",
+  },
+  titleSpacing: {
+    height: 30,
   },
   title: {
     fontSize: 24,
@@ -137,78 +155,104 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
+  errorMessage: {
+    color: "red",
+    fontSize: 14,
+    marginBottom: 10,
+    textAlign: "left",
+  },
   inputContainer: {
     flexDirection: "row",
-    marginBottom: 10,
+    gap: 10,
+    marginBottom: 20,
+    width: "100%",
+    justifyContent: "center",
   },
   input: {
     flex: 1,
+    padding: 10,
     borderWidth: 1,
     borderColor: "#ccc",
-    padding: 10,
-    borderRadius: 5,
+    borderRadius: 4,
     backgroundColor: "#fff",
   },
+  /* ✅ Grey "Add" Button */
   addButton: {
-    marginLeft: 10,
-    backgroundColor: "#007bff",
+    backgroundColor: "#ccc", // Grey color
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 5,
+    borderRadius: 4,
   },
   addButtonText: {
-    color: "#fff",
+    color: "#000", // Black text instead of white
     fontWeight: "bold",
-  },
-  errorText: {
-    color: "red",
-    textAlign: "center",
-    marginBottom: 10,
   },
   listItem: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 5,
+    padding: 12,
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
+    borderRadius: 6,
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   nameText: {
     fontSize: 16,
+    flex: 1,
+  },
+  /* ✅ Center align names */
+  centerText: {
+    textAlign: "center",
   },
   present: {
     textDecorationLine: "line-through",
-    color: "green",
+    color: "#888",
   },
   actions: {
     flexDirection: "row",
   },
-  editButton: {
-    marginRight: 10,
+  actionButton: {
+    marginLeft: 5,
+    borderRadius: 4,
+    padding: 5,
   },
-  deleteButton: {
-    marginRight: 10,
-  },
-  saveButton: {
-    marginRight: 10,
-  },
+  edit: { color: "#2196F3" },
+  save: { color: "#4CAF50" },
+  delete: { color: "#F44336" },
   buttonText: {
-    fontSize: 18,
-  },
-  editInput: {
-    borderBottomWidth: 1,
-    borderColor: "#000",
     fontSize: 16,
   },
   summary: {
-    fontSize: 16,
     fontWeight: "bold",
-    textAlign: "center",
-    marginTop: 20,
+    marginTop: 10,
+    fontSize: 16,
   },
+  /* ✅ Custom Grey Checkbox Styling */
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    borderColor: "#888",
+    borderRadius: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  checkedCheckbox: {
+    borderColor: "#888",
+  },
+  checkmark: {
+    color: "#888",
+    fontSize: 14,
+    fontWeight: "bold",
+    marginBottom: 4, // 👈 Added this to center it better
+  },
+
 });
 
 export default App;
